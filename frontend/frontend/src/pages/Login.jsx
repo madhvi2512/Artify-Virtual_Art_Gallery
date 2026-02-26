@@ -80,7 +80,9 @@ const Login = () => {
         },
       });
 
-      if (userData.role === "artist") {
+      if (userData.role === "admin") {
+        navigate("/admin/dashboard");
+      } else if (userData.role === "artist") {
         navigate("/artist/dashboard");
       } else {
         navigate("/");
@@ -88,7 +90,11 @@ const Login = () => {
 
     } catch (error) {
       const validationMessage = error?.response?.data?.errors?.[0]?.msg;
-      setError(validationMessage || error?.response?.data?.message || "Login failed");
+      const serverMessage = error?.response?.data?.message;
+      const networkMessage = !error?.response
+        ? "Backend is not running. Start backend server on port 5000."
+        : "";
+      setError(validationMessage || serverMessage || networkMessage || "Login failed");
     } finally {
       setLoading(false);
     }

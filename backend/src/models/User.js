@@ -3,28 +3,24 @@ const bcrypt = require("bcryptjs");
 
 const userSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
+    name: { type: String, required: true, trim: true },
+    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true },
     role: {
       type: String,
-      enum: ["admin", "artist", "customer"],
-      default: "customer",
+      enum: ["admin", "artist", "user", "customer"],
+      default: "user",
     },
-    profileImage: {
-      type: String,
-      default: "",
-    },
-    specialty: {
-      type: String,
-      default: "",
-      trim: true,
-    },
+    profileImage: { type: String, default: "" },
+    specialty: { type: String, default: "", trim: true },
+    isBlocked: { type: Boolean, default: false },
+    isDeleted: { type: Boolean, default: false },
+    deletedAt: { type: Date, default: null },
+    deletedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
   },
   { timestamps: true }
 );
 
-// Hash password
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
 
@@ -33,7 +29,7 @@ userSchema.pre("save", async function () {
 });
 
 userSchema.methods.matchPassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
+  return bcrypt.compare(enteredPassword, this.password);
 };
 
-module.exports = mongoose.model("User", userSchema);
+module.exports = mongoose.models.User || mongoose.model("User", userSchema);

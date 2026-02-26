@@ -1,12 +1,16 @@
+const { sendResponse } = require("../utils/apiResponse");
+
 const errorHandler = (err, req, res, next) => {
+  const statusCode = res.statusCode && res.statusCode !== 200 ? res.statusCode : 500;
+
   console.error(err);
 
-  res.status(res.statusCode === 200 ? 500 : res.statusCode).json({
+  return sendResponse(res, {
+    statusCode,
     success: false,
-    message: err.message,
-    stack: process.env.NODE_ENV === "production" ? null : err.stack,
+    message: err.message || "Internal server error",
+    data: process.env.NODE_ENV === "production" ? {} : { stack: err.stack },
   });
 };
 
 module.exports = errorHandler;
-

@@ -2,34 +2,68 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const asyncHandler = require("../utils/asyncHandler");
 
-const protect = asyncHandler(async (req, res, next) => {
-  let token;
+const normalizeRole = (role = "") => (role === "customer" ? "user" : role);
 
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer")
-  ) {
-    token = req.headers.authorization.split(" ")[1];
+const verifyToken = asyncHandler(async (req, res, next) => {
+  const authHeader = req.headers.authorization || "";
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    req.user = await User.findById(decoded.id).select("-password");
-
-    next();
-  } else {
+  if (!authHeader.startsWith("Bearer ")) {
     res.status(401);
-    throw new Error("Not authorized, no token");
+    throw new Error("Not authorized, token missing");
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select("-password");
+
+    if (!user || user.isDeleted) {
+      res.status(401);
+      throw new Error("User not found or inactive");
+    }
+
+    if (user.isBlocked) {
+      res.status(403);
+      throw new Error("Your account is blocked");
+    }
+
+    req.user = user;
+    next();
+  } catch (error) {
+    res.status(401);
+    throw new Error("Invalid or expired token");
   }
 });
 
 const authorize = (...roles) => {
   return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
+    const allowed = roles.map(normalizeRole);
+    const currentRole = normalizeRole(req.user?.role || "");
+
+    if (!allowed.includes(currentRole)) {
       res.status(403);
       throw new Error("Access denied: insufficient permissions");
     }
+
     next();
   };
 };
 
-module.exports = { protect, authorize };
+const isAdmin = (req, res, next) => {
+  const role = normalizeRole(req.user?.role || "");
+
+  if (role !== "admin") {
+    res.status(403);
+    throw new Error("Admin access required");
+  }
+
+  next();
+};
+
+module.exports = {
+  verifyToken,
+  isAdmin,
+  protect: verifyToken,
+  authorize,
+};
