@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 import { Link, useNavigate } from "react-router-dom";
 import { isAuthenticated, setStoredAuth } from "../utils/auth";
+import { api } from "../utils/api";
 import "./Auth.css";
 
 const Register = () => {
@@ -18,6 +19,8 @@ const Register = () => {
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated()) {
@@ -56,8 +59,7 @@ const Register = () => {
     if (!formData.password) {
       errors.password = "Password is required";
     } else if (!passwordRegex.test(formData.password)) {
-      errors.password =
-        "Password must be 6+ characters with letters and numbers";
+      errors.password = "Password must be 6+ characters with letters and numbers";
     }
 
     if (!confirmPassword) {
@@ -79,8 +81,7 @@ const Register = () => {
     setLoading(true);
 
     try {
-      // ✅ PRODUCTION SAFE (NO LOCALHOST)
-      const response = await axios.post("/api/auth/register", formData);
+      const response = await api.post("/api/auth/register", formData);
 
       const userData = response?.data?.data;
 
@@ -103,10 +104,10 @@ const Register = () => {
       } else {
         navigate("/login");
       }
-    } catch (err) {
+    } catch (requestError) {
       setError(
-        err?.response?.data?.message ||
-          err?.response?.data?.errors?.[0]?.msg ||
+        requestError?.response?.data?.message ||
+          requestError?.response?.data?.errors?.[0]?.msg ||
           "Registration failed"
       );
     } finally {
@@ -128,9 +129,7 @@ const Register = () => {
             onChange={handleChange}
             required
           />
-          {fieldErrors.name && (
-            <p className="auth-field-error">{fieldErrors.name}</p>
-          )}
+          {fieldErrors.name && <p className="auth-field-error">{fieldErrors.name}</p>}
 
           <input
             type="email"
@@ -140,58 +139,64 @@ const Register = () => {
             onChange={handleChange}
             required
           />
-          {fieldErrors.email && (
-            <p className="auth-field-error">{fieldErrors.email}</p>
-          )}
+          {fieldErrors.email && <p className="auth-field-error">{fieldErrors.email}</p>}
 
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            className="auth-input"
-            onChange={handleChange}
-            required
-          />
-          {fieldErrors.password && (
-            <p className="auth-field-error">{fieldErrors.password}</p>
-          )}
+          <div className="auth-password-field">
+            <input
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Password"
+              className="auth-input auth-input-password"
+              onChange={handleChange}
+              required
+            />
+            <button
+              type="button"
+              className="auth-password-toggle"
+              onClick={() => setShowPassword((prev) => !prev)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <FiEyeOff /> : <FiEye />}
+            </button>
+          </div>
+          {fieldErrors.password && <p className="auth-field-error">{fieldErrors.password}</p>}
 
-          <input
-            type="password"
-            placeholder="Confirm Password"
-            className="auth-input"
-            value={confirmPassword}
-            onChange={(e) => {
-              setConfirmPassword(e.target.value);
-              setFieldErrors((prev) => ({
-                ...prev,
-                confirmPassword: "",
-              }));
-            }}
-            required
-          />
+          <div className="auth-password-field">
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              placeholder="Confirm Password"
+              className="auth-input auth-input-password"
+              value={confirmPassword}
+              onChange={(e) => {
+                setConfirmPassword(e.target.value);
+                setFieldErrors((prev) => ({
+                  ...prev,
+                  confirmPassword: "",
+                }));
+              }}
+              required
+            />
+            <button
+              type="button"
+              className="auth-password-toggle"
+              onClick={() => setShowConfirmPassword((prev) => !prev)}
+              aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+            >
+              {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+            </button>
+          </div>
           {fieldErrors.confirmPassword && (
-            <p className="auth-field-error">
-              {fieldErrors.confirmPassword}
-            </p>
+            <p className="auth-field-error">{fieldErrors.confirmPassword}</p>
           )}
 
-          <select
-            name="role"
-            className="auth-select"
-            onChange={handleChange}
-          >
+          <select name="role" className="auth-select" onChange={handleChange}>
             <option value="customer">Customer</option>
             <option value="artist">Artist</option>
           </select>
 
           {error && <p className="auth-error">{error}</p>}
 
-          <button
-            type="submit"
-            className="auth-button"
-            disabled={loading}
-          >
+          <button type="submit" className="auth-button" disabled={loading}>
             {loading ? "Creating..." : "Register"}
           </button>
         </form>

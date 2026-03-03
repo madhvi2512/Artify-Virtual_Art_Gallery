@@ -53,6 +53,44 @@
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+.auth-password-field {
+  position: relative;
+}
+
+.auth-input-password {
+  padding-right: 44px;
+}
+
+.auth-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.72);
+  cursor: pointer;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-password-toggle:hover {
+  color: #fff;
+}
+
+.auth-password-toggle:focus-visible {
+  outline: 2px solid #ff4c60;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.auth-password-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
 .auth-input::placeholder {
   color: rgba(255, 255, 255, 0.55);
 }

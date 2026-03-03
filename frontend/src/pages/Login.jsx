@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 import { isAuthenticated, setStoredAuth } from "../utils/auth";
-import { api } from "../utils/api";   // ✅ IMPORTANT
+import { api } from "../utils/api";
 import "./Auth.css";
 
 const Login = () => {
@@ -9,10 +10,11 @@ const Login = () => {
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const [formData, setFormData] = useState({
     email: "",
-    password: ""
+    password: "",
   });
 
   useEffect(() => {
@@ -27,7 +29,7 @@ const Login = () => {
     setFieldErrors((prev) => ({ ...prev, [name]: "" }));
     setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -51,59 +53,53 @@ const Login = () => {
     return Object.keys(nextErrors).length === 0;
   };
 
- const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError("");
-  if (!validateForm()) return;
-  setLoading(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    if (!validateForm()) return;
+    setLoading(true);
 
-  try {
-    const res = await axios.post(
-      "/api/auth/login",
-      formData
-    );
+    try {
+      const res = await api.post("/api/auth/login", formData);
 
-    const userData = res?.data?.data;
+      const userData = res?.data?.data;
 
-    if (!userData?.token) {
-      throw new Error("Invalid server response");
+      if (!userData?.token) {
+        throw new Error("Invalid server response");
+      }
+
+      setStoredAuth({
+        token: userData.token,
+        user: {
+          _id: userData._id,
+          name: userData.name,
+          email: userData.email,
+          role: userData.role,
+          profileImage: userData.profileImage || "",
+          specialty: userData.specialty || "",
+        },
+      });
+
+      if (userData.role === "admin") {
+        navigate("/admin/dashboard");
+      } else if (userData.role === "artist") {
+        navigate("/artist/dashboard");
+      } else {
+        navigate("/");
+      }
+    } catch (requestError) {
+      const serverMessage = requestError?.response?.data?.message;
+      setError(serverMessage || "Login failed");
+    } finally {
+      setLoading(false);
     }
-
-    setStoredAuth({
-      token: userData.token,
-      user: {
-        _id: userData._id,
-        name: userData.name,
-        email: userData.email,
-        role: userData.role,
-        profileImage: userData.profileImage || "",
-        specialty: userData.specialty || "",
-      },
-    });
-
-    if (userData.role === "admin") {
-      navigate("/admin/dashboard");
-    } else if (userData.role === "artist") {
-      navigate("/artist/dashboard");
-    } else {
-      navigate("/");
-    }
-
-  } catch (error) {
-    const serverMessage = error?.response?.data?.message;
-    setError(serverMessage || "Login failed");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div className="auth-page">
       <div className="auth-card">
         <h2 className="auth-title">Welcome Back</h2>
-        <p className="auth-subtitle">
-          Log in to continue exploring Artify.
-        </p>
+        <p className="auth-subtitle">Log in to continue exploring Artify.</p>
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <label className="auth-label" htmlFor="login-email">
@@ -119,34 +115,36 @@ const Login = () => {
             onChange={handleChange}
             required
           />
-          {fieldErrors.email && (
-            <p className="auth-field-error">{fieldErrors.email}</p>
-          )}
+          {fieldErrors.email && <p className="auth-field-error">{fieldErrors.email}</p>}
 
           <label className="auth-label" htmlFor="login-password">
             Password
           </label>
-          <input
-            className="auth-input"
-            id="login-password"
-            name="password"
-            type="password"
-            placeholder="Enter your password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
-          {fieldErrors.password && (
-            <p className="auth-field-error">{fieldErrors.password}</p>
-          )}
+          <div className="auth-password-field">
+            <input
+              className="auth-input auth-input-password"
+              id="login-password"
+              name="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="Enter your password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+            <button
+              type="button"
+              className="auth-password-toggle"
+              onClick={() => setShowPassword((prev) => !prev)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <FiEyeOff /> : <FiEye />}
+            </button>
+          </div>
+          {fieldErrors.password && <p className="auth-field-error">{fieldErrors.password}</p>}
 
           {error && <p className="auth-error">{error}</p>}
 
-          <button
-            className="auth-button"
-            type="submit"
-            disabled={loading}
-          >
+          <button className="auth-button" type="submit" disabled={loading}>
             {loading ? "Logging in..." : "Login"}
           </button>
         </form>
