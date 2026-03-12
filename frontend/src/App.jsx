@@ -1,111 +1,117 @@
-import { BrowserRouter as Router, Navigate, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
-import MainLayout from "./layouts/MainLayout";
-import ArtistLayout from "./layouts/ArtistLayout";
-
-import Home from "./pages/Home";
-import Gallery from "./pages/Gallery";
-import ArtistsPage from "./pages/Artists";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Login from "./pages/Login";
-import ArtworkDetails from "./pages/ArtworkDetails";
-import Cart from "./pages/Cart";
-import Checkout from "./pages/Checkout";
-import MyOrders from "./pages/MyOrders";
-import Register from "./pages/Register";
-import ArtistDashboard from "./pages/ArtistDashboard";
-import ChatPage from "./pages/ChatPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import DashboardLayout from "./components/DashboardLayout";
+import MainLayout from "./layouts/MainLayout";
+import About from "./pages/About";
+import AdminDashboard from "./pages/AdminDashboard";
+import ArtistDashboard from "./pages/ArtistDashboard";
+import ArtistProfile from "./pages/ArtistProfile";
+import ArtworkDetails from "./pages/ArtworkDetails";
+import ArtworkManagement from "./pages/ArtworkManagement";
+import CategoryManagement from "./pages/CategoryManagement";
+import Gallery from "./pages/Gallery";
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import ManageArtworks from "./pages/ManageArtworks";
+import OrderManagement from "./pages/OrderManagement";
+import Orders from "./pages/Orders";
+import Profile from "./pages/Profile";
+import Register from "./pages/Register";
+import Reviews from "./pages/Reviews";
+import Sales from "./pages/Sales";
+import UploadArtwork from "./pages/UploadArtwork";
+import UserDashboard from "./pages/UserDashboard";
+import UserManagement from "./pages/UserManagement";
+import ArtistManagement from "./pages/ArtistManagement";
 
-import AdminLayout from "./admin/layouts/AdminLayout";
-import AdminProtectedRoute from "./admin/components/ProtectedRoute";
-import Dashboard from "./admin/pages/Dashboard";
-import Users from "./admin/pages/Users";
-import Artists from "./admin/pages/Artists";
-import Artworks from "./admin/pages/Artworks";
-import Orders from "./admin/pages/Orders";
-import Categories from "./admin/pages/Categories";
-import Reports from "./admin/pages/Reports";
+const userLinks = [
+  { to: "/user/dashboard", label: "Dashboard" },
+  { to: "/gallery", label: "Browse Gallery" },
+  { to: "/user/profile", label: "Profile" },
+  { to: "/user/orders", label: "Orders" },
+  { to: "/user/reviews", label: "Reviews" },
+];
+
+const artistLinks = [
+  { to: "/artist/dashboard", label: "Dashboard" },
+  { to: "/artist/upload", label: "Upload Artwork" },
+  { to: "/artist/artworks", label: "Manage Artworks" },
+  { to: "/artist/sales", label: "Sales" },
+  { to: "/artist/profile", label: "Profile" },
+];
+
+const adminLinks = [
+  { to: "/admin/dashboard", label: "Dashboard" },
+  { to: "/admin/users", label: "Users" },
+  { to: "/admin/artists", label: "Artists" },
+  { to: "/admin/artworks", label: "Artworks" },
+  { to: "/admin/categories", label: "Categories" },
+  { to: "/admin/orders", label: "Orders" },
+];
 
 function App() {
   return (
-    <Router>
+    <BrowserRouter>
       <Routes>
         <Route element={<MainLayout />}>
           <Route path="/" element={<Home />} />
           <Route path="/gallery" element={<Gallery />} />
-          <Route path="/gallery/:id" element={<ArtworkDetails />} />
-          <Route
-            path="/cart"
-            element={
-              <ProtectedRoute roles={["customer", "user"]}>
-                <Cart />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/checkout"
-            element={
-              <ProtectedRoute roles={["customer", "user"]}>
-                <Checkout />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/my-orders"
-            element={
-              <ProtectedRoute roles={["customer", "user"]}>
-                <MyOrders />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/artists" element={<ArtistsPage />} />
+          <Route path="/artworks/:id" element={<ArtworkDetails />} />
           <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route
-            path="/chat"
-            element={
-              <ProtectedRoute roles={["customer", "user", "artist"]}>
-                <ChatPage />
-              </ProtectedRoute>
-            }
-          />
+        </Route>
+
+        <Route
+          path="/user"
+          element={
+            <ProtectedRoute roles={["user"]}>
+              <DashboardLayout title="User Dashboard" links={userLinks} />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<UserDashboard />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="orders" element={<Orders />} />
+          <Route path="reviews" element={<Reviews />} />
         </Route>
 
         <Route
           path="/artist"
           element={
             <ProtectedRoute roles={["artist"]}>
-              <ArtistLayout />
+              <DashboardLayout title="Artist Dashboard" links={artistLinks} />
             </ProtectedRoute>
           }
         >
+          <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<ArtistDashboard />} />
-          <Route path="chat" element={<ChatPage />} />
+          <Route path="upload" element={<UploadArtwork />} />
+          <Route path="artworks" element={<ManageArtworks />} />
+          <Route path="sales" element={<Sales />} />
+          <Route path="profile" element={<ArtistProfile />} />
         </Route>
 
         <Route
           path="/admin"
           element={
-            <AdminProtectedRoute roles={["admin"]}>
-              <AdminLayout />
-            </AdminProtectedRoute>
+            <ProtectedRoute roles={["admin"]}>
+              <DashboardLayout title="Admin Dashboard" links={adminLinks} />
+            </ProtectedRoute>
           }
         >
           <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="users" element={<Users />} />
-          <Route path="artists" element={<Artists />} />
-          <Route path="artworks" element={<Artworks />} />
-          <Route path="orders" element={<Orders />} />
-          <Route path="categories" element={<Categories />} />
-          <Route path="reports" element={<Reports />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="users" element={<UserManagement />} />
+          <Route path="artists" element={<ArtistManagement />} />
+          <Route path="artworks" element={<ArtworkManagement />} />
+          <Route path="categories" element={<CategoryManagement />} />
+          <Route path="orders" element={<OrderManagement />} />
         </Route>
       </Routes>
-    </Router>
+    </BrowserRouter>
   );
 }
 

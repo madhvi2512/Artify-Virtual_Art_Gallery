@@ -1,19 +1,10 @@
 import axios from "axios";
 import { getStoredToken } from "./auth";
 
-/*
-  Production architecture:
-  Browser -> madhvi.artify -> Nginx -> Backend (127.0.0.1:5000)
-
-  So frontend must always call relative /api
-*/
-
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true,
 });
 
 // Automatically attach token if exists

@@ -1,5 +1,5 @@
-const TOKEN_KEY = "token";
-const USER_KEY = "user";
+const TOKEN_KEY = "artify_token";
+const USER_KEY = "artify_user";
 
 export const setStoredAuth = ({ token, user }) => {
   localStorage.setItem(TOKEN_KEY, token);
@@ -14,15 +14,34 @@ export const clearStoredAuth = () => {
 export const getStoredToken = () => localStorage.getItem(TOKEN_KEY);
 
 export const getStoredUser = () => {
-  const stored = localStorage.getItem(USER_KEY);
-  if (!stored) return null;
+  const value = localStorage.getItem(USER_KEY);
+
+  if (!value) {
+    return null;
+  }
 
   try {
-    return JSON.parse(stored);
-  } catch {
+    return JSON.parse(value);
+  } catch (error) {
     clearStoredAuth();
     return null;
   }
 };
 
-export const isAuthenticated = () => Boolean(getStoredToken() && getStoredUser());
+export const updateStoredUser = (user) => {
+  const currentToken = getStoredToken();
+  if (!currentToken) {
+    return;
+  }
+
+  setStoredAuth({
+    token: currentToken,
+    user,
+  });
+};
+
+export const getDashboardPath = (role) => {
+  if (role === "admin") return "/admin/dashboard";
+  if (role === "artist") return "/artist/dashboard";
+  return "/user/dashboard";
+};

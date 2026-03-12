@@ -37,6 +37,17 @@ const Checkout = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  const addressFieldConfig = [
+    { key: "fullName", label: "Full Name", placeholder: "Enter full name" },
+    { key: "phone", label: "Phone", placeholder: "Enter 10-digit mobile number" },
+    { key: "addressLine1", label: "Address Line 1", placeholder: "House no, street, area" },
+    { key: "addressLine2", label: "Address Line 2", placeholder: "Landmark (optional)" },
+    { key: "city", label: "City", placeholder: "Enter city" },
+    { key: "state", label: "State", placeholder: "Enter state" },
+    { key: "postalCode", label: "Postal Code", placeholder: "Enter pincode" },
+    { key: "country", label: "Country", placeholder: "Country" },
+  ];
+
   useEffect(() => {
     const loadCart = async () => {
       try {
@@ -117,52 +128,78 @@ const Checkout = () => {
 
   return (
     <section className="shop-page">
-      <h1>Checkout</h1>
+      <div className="checkout-header">
+        <h1>Checkout</h1>
+        <p>Review delivery details and complete your purchase securely.</p>
+      </div>
       {error && <p className="shop-error">{error}</p>}
 
       <div className="checkout-grid">
         <div className="checkout-form">
           <h2>Shipping Address</h2>
-          {Object.keys(initialAddress).map((key) => (
-            <input
-              key={key}
-              value={address[key]}
-              placeholder={key}
-              onChange={(e) => setAddress((prev) => ({ ...prev, [key]: e.target.value }))}
-            />
-          ))}
+          <div className="checkout-fields">
+            {addressFieldConfig.map(({ key, label, placeholder }) => (
+              <label key={key} className="checkout-field">
+                <span>{label}</span>
+                <input
+                  value={address[key]}
+                  placeholder={placeholder}
+                  onChange={(e) => setAddress((prev) => ({ ...prev, [key]: e.target.value }))}
+                />
+              </label>
+            ))}
+          </div>
 
           <h2>Payment Method</h2>
           <div className="shop-radio-row">
-            <label>
+            <label className="checkout-radio">
               <input
                 type="radio"
                 checked={paymentMethod === "razorpay"}
                 onChange={() => setPaymentMethod("razorpay")}
               />
-              Razorpay
+              <span>Razorpay (UPI / Cards / Netbanking)</span>
             </label>
-            <label>
+            <label className="checkout-radio">
               <input
                 type="radio"
                 checked={paymentMethod === "cod"}
                 onChange={() => setPaymentMethod("cod")}
               />
-              Cash on Delivery
+              <span>Cash on Delivery</span>
             </label>
           </div>
         </div>
 
         <div className="shop-summary">
           <h2>Order Summary</h2>
-          {cart.items.map((item) => (
-            <p key={item.artwork?._id}>
-              {item.artwork?.title} x {item.quantity} = Rs. {item.subtotal}
+          <div className="checkout-summary-items">
+            {cart.items.map((item) => (
+              <div key={item.artwork?._id} className="checkout-summary-item">
+                <p>{item.artwork?.title}</p>
+                <span>
+                  {item.quantity} x Rs. {item.artwork?.price || 0}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <div className="checkout-totals">
+            <p>
+              <span>Subtotal</span>
+              <strong>Rs. {cart.amounts?.subtotal || 0}</strong>
             </p>
-          ))}
-          <p>Subtotal: Rs. {cart.amounts?.subtotal || 0}</p>
-          <p>Total: Rs. {cart.amounts?.total || 0}</p>
-          <button type="button" onClick={placeOrder} disabled={submitting}>
+            <p>
+              <span>Shipping</span>
+              <strong>Free</strong>
+            </p>
+            <p className="checkout-total-row">
+              <span>Total</span>
+              <strong>Rs. {cart.amounts?.total || 0}</strong>
+            </p>
+          </div>
+
+          <button type="button" className="checkout-place-btn" onClick={placeOrder} disabled={submitting}>
             {submitting ? "Processing..." : "Place Order"}
           </button>
         </div>

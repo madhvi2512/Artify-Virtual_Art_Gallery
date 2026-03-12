@@ -8,12 +8,18 @@ const helmet = require("helmet");
 const userRoutes = require("./routes/userRoutes");
 const authRoutes = require("./routes/authRoutes");
 const artworkRoutes = require("./routes/artworkRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
 const orderRoutes = require("./routes/orderRoutes");
-const chatRoutes = require("./routes/chatRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const errorHandler = require("./middleware/errorMiddleware");
 
 const app = express();
+const corsOptions = {
+  origin: process.env.CLIENT_URL || "http://localhost:5173",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
 
 /* =======================
    SECURITY MIDDLEWARE
@@ -29,16 +35,18 @@ const limiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 minutes
   max: 100,
   message: "Too many requests, try again later",
+  skip: (req) => req.method === "OPTIONS",
 });
 
+app.use(cors(corsOptions));
 app.use(limiter);
-app.use(cors());
 
 /* =======================
    BODY PARSER
 ======================= */
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 /* =======================
    LOGGER
@@ -65,8 +73,9 @@ app.get("/api/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/artworks", artworkRoutes);
+app.use("/api/categories", categoryRoutes);
 app.use("/api/orders", orderRoutes);
-app.use("/api/chats", chatRoutes);
+app.use("/api/reviews", reviewRoutes);
 app.use("/api/admin", adminRoutes);
 
 /* =======================

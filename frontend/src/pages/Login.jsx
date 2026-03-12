@@ -1,159 +1,81 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FiEye, FiEyeOff } from "react-icons/fi";
-import { isAuthenticated, setStoredAuth } from "../utils/auth";
-import { api } from "../utils/api";
+
+import { getDashboardPath, setStoredAuth } from "../utils/auth";
+import { artifyApi } from "../utils/artifyApi";
 import "./Auth.css";
 
 const Login = () => {
   const navigate = useNavigate();
-  const [error, setError] = useState("");
-  const [fieldErrors, setFieldErrors] = useState({});
-  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
-
-  useEffect(() => {
-    if (isAuthenticated()) {
-      navigate("/", { replace: true });
-    }
-  }, [navigate]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setError("");
-    setFieldErrors((prev) => ({ ...prev, [name]: "" }));
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const validateForm = () => {
-    const nextErrors = {};
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!formData.email.trim()) {
-      nextErrors.email = "Email is required";
-    } else if (!emailRegex.test(formData.email)) {
-      nextErrors.email = "Please enter a valid email address";
-    }
-
-    if (!formData.password) {
-      nextErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      nextErrors.password = "Password must be at least 6 characters";
-    }
-
-    setFieldErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    if (!validateForm()) return;
+  const handleSubmit = async (event) => {
+    event.preventDefault();
     setLoading(true);
+    setError("");
 
     try {
-      const res = await api.post("/api/auth/login", formData);
-
-      const userData = res?.data?.data;
-
-      if (!userData?.token) {
-        throw new Error("Invalid server response");
-      }
-
-      setStoredAuth({
-        token: userData.token,
-        user: {
-          _id: userData._id,
-          name: userData.name,
-          email: userData.email,
-          role: userData.role,
-          profileImage: userData.profileImage || "",
-          specialty: userData.specialty || "",
-        },
-      });
-
-      if (userData.role === "admin") {
-        navigate("/admin/dashboard");
-      } else if (userData.role === "artist") {
-        navigate("/artist/dashboard");
-      } else {
-        navigate("/");
-      }
-    } catch (requestError) {
-      const serverMessage = requestError?.response?.data?.message;
-      setError(serverMessage || "Login failed");
+      const response = await artifyApi.login(form);
+      setStoredAuth(response.data.data);
+      navigate(getDashboardPath(response.data.data.user.role), { replace: true });
+    } catch (submitError) {
+      setError(submitError.response?.data?.message || "Login failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <h2 className="auth-title">Welcome Back</h2>
-        <p className="auth-subtitle">Log in to continue exploring Artify.</p>
-
-        <form className="auth-form" onSubmit={handleSubmit}>
-          <label className="auth-label" htmlFor="login-email">
-            Email
-          </label>
+    <section className="auth-page">
+      <form className="auth-panel auth-fade-in" onSubmit={handleSubmit}>
+        <span className="auth-eyebrow">Welcome Back</span>
+        <h1 className="auth-title">Login to Artify</h1>
+        <p className="auth-subtitle">Step back into the gallery and continue your curated art journey.</p>
+        <div className="auth-form">
           <input
-            className="auth-input"
-            id="login-email"
-            name="email"
             type="email"
-            placeholder="you@example.com"
-            value={formData.email}
-            onChange={handleChange}
+            className="auth-input"
+            placeholder="Email"
+            value={form.email}
+            onChange={(event) => setForm({ ...form, email: event.target.value })}
             required
           />
-          {fieldErrors.email && <p className="auth-field-error">{fieldErrors.email}</p>}
-
-          <label className="auth-label" htmlFor="login-password">
-            Password
-          </label>
           <div className="auth-password-field">
             <input
-              className="auth-input auth-input-password"
-              id="login-password"
-              name="password"
               type={showPassword ? "text" : "password"}
-              placeholder="Enter your password"
-              value={formData.password}
-              onChange={handleChange}
+              className="auth-input auth-password-input"
+              placeholder="Password"
+              value={form.password}
+              onChange={(event) => setForm({ ...form, password: event.target.value })}
               required
             />
             <button
               type="button"
               className="auth-password-toggle"
-              onClick={() => setShowPassword((prev) => !prev)}
+              onClick={() => setShowPassword((current) => !current)}
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? <FiEyeOff /> : <FiEye />}
             </button>
           </div>
-          {fieldErrors.password && <p className="auth-field-error">{fieldErrors.password}</p>}
-
-          {error && <p className="auth-error">{error}</p>}
-
-          <button className="auth-button" type="submit" disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
+          {error ? <p className="auth-error">{error}</p> : null}
+          <button
+            type="submit"
+            className="btn auth-submit"
+            disabled={loading}
+          >
+            {loading ? "Signing in..." : "Login"}
           </button>
-        </form>
-
+        </div>
         <p className="auth-switch">
-          Not registered yet? <Link to="/register">Sign up</Link>
+          New to Artify? <Link to="/register">Create an account</Link>
         </p>
-      </div>
-    </div>
+      </form>
+    </section>
   );
 };
 

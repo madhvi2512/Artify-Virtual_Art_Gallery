@@ -14,26 +14,28 @@ const verifyToken = asyncHandler(async (req, res, next) => {
 
   const token = authHeader.split(" ")[1];
 
+  let decoded;
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id).select("-password");
-
-    if (!user || user.isDeleted) {
-      res.status(401);
-      throw new Error("User not found or inactive");
-    }
-
-    if (user.isBlocked) {
-      res.status(403);
-      throw new Error("Your account is blocked");
-    }
-
-    req.user = user;
-    next();
+    decoded = jwt.verify(token, process.env.JWT_SECRET);
   } catch (error) {
     res.status(401);
     throw new Error("Invalid or expired token");
   }
+
+  const user = await User.findById(decoded.id).select("-password");
+
+  if (!user || user.isDeleted) {
+    res.status(401);
+    throw new Error("User not found or inactive");
+  }
+
+  if (user.isBlocked) {
+    res.status(403);
+    throw new Error("Your account is blocked");
+  }
+
+  req.user = user;
+  next();
 });
 
 const authorize = (...roles) => {

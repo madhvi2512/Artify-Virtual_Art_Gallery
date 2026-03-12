@@ -1,5 +1,6 @@
 import { Navigate } from "react-router-dom";
-import { getStoredToken, getStoredUser } from "../utils/auth";
+
+import { getDashboardPath, getStoredToken, getStoredUser } from "../utils/auth";
 
 const ProtectedRoute = ({ children, roles = [] }) => {
   const token = getStoredToken();
@@ -9,8 +10,8 @@ const ProtectedRoute = ({ children, roles = [] }) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (roles.length > 0 && !roles.includes(user.role)) {
-    return <Navigate to="/" replace />;
+  if (roles.length && !roles.includes(user.role)) {
+    return <Navigate to={getDashboardPath(user.role)} replace />;
   }
 
   return children;
