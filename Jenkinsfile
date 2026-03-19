@@ -2,22 +2,25 @@ pipeline {
     agent any
 
     stages {
+
         stage('Clone') {
             steps {
-                echo "Cloning..."
+                git 'https://github.com/madhvi2512/Artify-Virtual_Art_Gallery.git'
             }
         }
 
-        stage('Install') {
+        stage('Build Docker Images') {
             steps {
-                bat 'npm install'
+                bat 'docker-compose build'
             }
         }
 
-        stage('Build') {
+        stage('Run Containers') {
             steps {
-                echo "Build successful"
+                bat 'docker-compose down'
+                bat 'docker-compose up -d'
             }
         }
+
     }
 }
